@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recent Publications | Lynch Lab — UCSF / ZSFG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="brand">
+        <div class="brand-mark">m/z</div>
+        <div class="brand-text">
+          <span class="brand-title">Lynch Laboratory</span>
+          <span class="brand-subtitle">UCSF Dept. of Laboratory Medicine &middot; ZSFG Toxicology</span>
+        </div>
+      </a>
+
+      <nav class="nav-links" aria-label="Main Navigation">
+        <a href="index.html" class="nav-link">Overview</a>
+        <a href="projects.html" class="nav-link">Current Projects</a>
+        <a href="publications.html" class="nav-link active">Publications</a>
+        <a href="members.html" class="nav-link">Lab Members</a>
+      </nav>
+
+      <div class="header-actions" id="header-auth-status">
+        <a href="members.html?login=1" class="btn btn-outline btn-sm">Member Login</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-dot"></span> Peer-Reviewed Literature</div>
+            <h1 class="hero-title" style="font-size: 2.5rem; margin-bottom: 12px;">Recent Publications</h1>
+            <p class="section-subtitle">
+              Selected peer-reviewed articles from Dr. Kara Lynch and collaborators on clinical mass spectrometry, untargeted drug testing, and public health toxicology surveillance.
+            </p>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <a href="https://scholar.google.com/citations?user=pWTTFpIAAAAJ&hl=en" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+              Full Google Scholar Profile &#8599;
+            </a>
+            <a href="https://profiles.ucsf.edu/kara.lynch" target="_blank" rel="noopener noreferrer" class="btn btn-outline">
+              UCSF Profiles &#8599;
+            </a>
+          </div>
+        </div>
+
+        <!-- Filter & Search Bar -->
+        <div class="filter-bar">
+          <div class="search-input-wrap">
+            <input
+              type="search"
+              id="pub-search-input"
+              class="search-input"
+              placeholder="Search by keyword, analyte (e.g., fentanyl, xylazine, SWATH, THC), or author..."
+              aria-label="Search publications"
+            />
+          </div>
+          <div class="filter-tabs" id="pub-filter-tabs">
+            <button type="button" class="filter-tab active" data-category="all">All Topics</button>
+            <button type="button" class="filter-tab" data-category="surveillance">Drug Surveillance &amp; Harm Reduction</button>
+            <button type="button" class="filter-tab" data-category="hrms">High-Resolution MS</button>
+            <button type="button" class="filter-tab" data-category="cannabinoids">Cannabinoids &amp; Natural Toxins</button>
+            <button type="button" class="filter-tab" data-category="clinical">Clinical Toxicology</button>
+          </div>
+        </div>
+
+        <!-- Publications List Container -->
+        <div class="pub-list" id="publications-container"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Lynch Analytical &amp; Clinical Toxicology Laboratory</strong><br/>
+        University of California, San Francisco &middot; Zuckerberg San Francisco General Hospital
+      </div>
+      <div class="footer-links">
+        <a href="https://profiles.ucsf.edu/kara.lynch" target="_blank" rel="noopener noreferrer">UCSF Profiles</a>
+        <a href="https://scholar.google.com/citations?user=pWTTFpIAAAAJ&hl=en" target="_blank" rel="noopener noreferrer">Google Scholar</a>
+        <a href="projects.html">Projects</a>
+        <a href="publications.html">Publications</a>
+        <a href="members.html">Members Portal</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    let activeCategory = 'all';
+    let searchQuery = '';
+
+    function renderPublications() {
+      const container = document.getElementById('publications-container');
+      if (!container) return;
+
+      const filtered = PUBLICATIONS_DATA.filter(pub => {
+        const matchesCat = activeCategory === 'all' || pub.category === activeCategory;
+        const q = searchQuery.toLowerCase().trim();
+        const matchesQuery = !q ||
+          pub.title.toLowerCase().includes(q) ||
+          pub.authors.toLowerCase().includes(q) ||
+          pub.journal.toLowerCase().includes(q) ||
+          pub.summary.toLowerCase().includes(q) ||
+          String(pub.year).includes(q);
+        return matchesCat && matchesQuery;
+      });
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="pub-item" style="text-align:center; padding:40px;">
+            <p style="color:var(--text-secondary); margin-bottom:12px;">No matching publications found for your filter criteria.</p>
+            <a href="https://scholar.google.com/citations?user=pWTTFpIAAAAJ&hl=en" target="_blank" rel="noopener noreferrer" class="btn btn-outline btn-sm">
+              Search all 100+ publications on Google Scholar &#8599;
+            </a>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = filtered.map(pub => `
+        <article class="pub-item">
+          <div class="pub-top">
+            <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+              <span class="pub-year">${pub.year}</span>
+              <span class="pub-journal">${escapeHtml(pub.journal)}</span>
+            </div>
+            <span class="pill">${escapeHtml(pub.categoryLabel)}</span>
+          </div>
+          <h2 class="pub-title">${escapeHtml(pub.title)}</h2>
+          <div class="pub-authors">${escapeHtml(pub.authors)}</div>
+          <div class="pub-summary">${escapeHtml(pub.summary)}</div>
+          <div class="pub-actions">
+            <a href="${escapeHtml(pub.url)}" target="_blank" rel="noopener noreferrer" class="ext-link-pill">
+              View on Google Scholar &#8599;
+            </a>
+            <button type="button" class="ext-link-pill" style="cursor:pointer;" onclick="copyBibtex('${pub.id}', this)">
+              Copy BibTeX
+            </button>
+          </div>
+        </article>
+      `).join('');
+    }
+
+    function copyBibtex(pubId, btnEl) {
+      const pub = PUBLICATIONS_DATA.find(p => p.id === pubId);
+      if (!pub) return;
+      navigator.clipboard.writeText(pub.bibtex).then(() => {
+        const orig = btnEl.textContent;
+        btnEl.textContent = 'Copied BibTeX!';
+        setTimeout(() => { btnEl.textContent = orig; }, 1800);
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderPublications();
+
+      const searchInput = document.getElementById('pub-search-input');
+      if (searchInput) {
+        searchInput.addEventListener('input', e => {
+          searchQuery = e.target.value;
+          renderPublications();
+        });
+      }
+
+      const tabs = document.querySelectorAll('#pub-filter-tabs .filter-tab');
+      tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+          tabs.forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          activeCategory = tab.getAttribute('data-category');
+          renderPublications();
+        });
+      });
+    });
+  </script>
+</body>
+</html>

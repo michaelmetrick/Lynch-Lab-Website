@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Current Members &amp; CV Portal | Lynch Lab — UCSF / ZSFG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <!-- PDF.js for client-side PDF Resume/CV text extraction -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="brand">
+        <div class="brand-mark">m/z</div>
+        <div class="brand-text">
+          <span class="brand-title">Lynch Laboratory</span>
+          <span class="brand-subtitle">UCSF Dept. of Laboratory Medicine &middot; ZSFG Toxicology</span>
+        </div>
+      </a>
+
+      <nav class="nav-links" aria-label="Main Navigation">
+        <a href="index.html" class="nav-link">Overview</a>
+        <a href="projects.html" class="nav-link">Current Projects</a>
+        <a href="publications.html" class="nav-link">Publications</a>
+        <a href="members.html" class="nav-link active">Lab Members</a>
+      </nav>
+
+      <div class="header-actions" id="header-auth-status">
+        <button type="button" class="btn btn-outline btn-sm" onclick="openLoginModal()">Member Login</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-dot"></span> People &amp; Member Self-Service Portal</div>
+            <h1 class="hero-title" style="font-size: 2.5rem; margin-bottom: 12px;">Current Lab Members</h1>
+            <p class="section-subtitle">
+              Our multidisciplinary team of clinical chemistry fellows, laboratory medicine residents, postdoctoral scholars, staff research associates, and graduate researchers across UCSF, ZSFG, and Stanford.
+            </p>
+          </div>
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-primary" onclick="openLoginModal()">
+              Member Login / CV Upload
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="resetMembersToDefault()" title="Restore default draft profiles">
+              Reset Drafts
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Portal Status Banner -->
+        <div class="portal-banner" id="portal-banner"></div>
+
+        <!-- Members Grid -->
+        <div class="members-grid" id="members-grid"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================================================
+       MODAL 1: Member Login & Account Selector
+       ======================================================================== -->
+  <div class="modal-backdrop" id="login-modal" role="dialog" aria-modal="true" aria-labelledby="login-modal-title">
+    <div class="modal-panel" style="max-width: 540px;">
+      <div class="modal-header">
+        <div>
+          <div class="eyebrow" style="margin-bottom:4px;"><span class="eyebrow-dot"></span> Lab Authentication</div>
+          <h2 class="modal-title" id="login-modal-title">Member Portal Sign In</h2>
+        </div>
+        <button type="button" class="close-btn" onclick="closeLoginModal()" aria-label="Close">&times;</button>
+      </div>
+
+      <form id="login-form" onsubmit="handleMemberLoginSubmit(event)">
+        <div class="form-group">
+          <label class="form-label" for="login-member-select">Select Lab Member Account</label>
+          <select id="login-member-select" class="form-select" onchange="syncLoginEmailFromSelect()"></select>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="login-email">UCSF / Stanford Email</label>
+            <input type="email" id="login-email" class="form-input" placeholder="name@ucsf.edu" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="login-password">
+              Lab Passcode
+              <span class="form-hint">(Demo: any password)</span>
+            </label>
+            <input type="password" id="login-password" class="form-input" value="lynchlab2026" required />
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; margin-top:12px; flex-wrap:wrap;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="createNewMemberAccount()">
+            + New Lab Member Profile
+          </button>
+          <div style="display:flex; gap:10px;">
+            <button type="button" class="btn btn-ghost" onclick="closeLoginModal()">Cancel</button>
+            <button type="submit" class="btn btn-primary">Sign In &amp; Open CV Editor &rarr;</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 2: Profile Editor, Photo Upload & Resume/CV Auto-Populate
+       ======================================================================== -->
+  <div class="modal-backdrop" id="editor-modal" role="dialog" aria-modal="true" aria-labelledby="editor-modal-title">
+    <div class="modal-panel">
+      <div class="modal-header">
+        <div>
+          <div class="eyebrow" style="margin-bottom:4px;"><span class="eyebrow-dot"></span> Member Profile &amp; CV Parser</div>
+          <h2 class="modal-title" id="editor-modal-title">Edit Member Profile</h2>
+        </div>
+        <button type="button" class="close-btn" onclick="closeEditorModal()" aria-label="Close">&times;</button>
+      </div>
+
+      <div id="cv-parse-toast" class="status-toast"></div>
+
+      <!-- Resume / CV Upload & Auto-Populate Dropzone -->
+      <div class="cv-dropzone">
+        <div style="font-weight: 600; font-size: 15px; color: var(--text-primary); margin-bottom: 4px;">
+          Auto-Populate Profile from Resume / CV
+        </div>
+        <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 14px;">
+          Upload a <strong>.PDF</strong>, <strong>.TXT</strong>, <strong>.MD</strong>, or <strong>.DOCX</strong> CV to automatically extract your <em>Past &amp; Present Training</em>, <em>Research Interests</em>, <em>Current Projects</em>, <em>Interests Outside of Lab</em>, and profile URLs.
+        </p>
+        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+          <label class="btn btn-teal btn-sm" style="cursor:pointer;">
+            Upload Resume / CV File
+            <input type="file" id="cv-file-input" accept=".pdf,.txt,.md,.doc,.docx,.rtf" style="display:none;" onchange="handleCvFileUpload(event)" />
+          </label>
+          <button type="button" class="btn btn-outline btn-sm" onclick="togglePasteCvBox()">
+            Paste CV Text
+          </button>
+          <button type="button" class="btn btn-outline btn-sm" onclick="runSampleCvDemo()">
+            Try Sample CV Auto-Fill
+          </button>
+        </div>
+
+        <!-- Optional Paste Raw CV Text Box -->
+        <div id="paste-cv-container" style="display:none; margin-top:14px; text-align:left;">
+          <textarea
+            id="paste-cv-textarea"
+            class="form-textarea"
+            placeholder="Paste sections from your CV here (e.g. Education/Training, Research Interests, Current Projects, Interests Outside of Lab, Google Scholar / ResearchGate / Personal Website URLs)..."
+            style="background:#FFFFFF; min-height:110px;"
+          ></textarea>
+          <div style="margin-top:8px; text-align:right;">
+            <button type="button" class="btn btn-teal btn-sm" onclick="handlePastedCvParse()">
+              Parse Pasted CV Text
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Profile Edit Form -->
+      <form id="member-edit-form" onsubmit="handleProfileSave(event)">
+        <input type="hidden" id="edit-member-id" />
+
+        <!-- Photo Upload Row -->
+        <div style="display:flex; align-items:center; gap:18px; margin-bottom:20px; padding:14px; background:var(--bg-primary); border-radius:var(--radius-md); border:1px solid var(--border-color);">
+          <div class="member-photo" id="edit-photo-preview" style="width:72px; height:72px;">KL</div>
+          <div style="flex:1;">
+            <div style="font-size:13.5px; font-weight:600; margin-bottom:4px;">Profile Photograph</div>
+            <div style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">
+              Upload a portrait photo (JPG, PNG, WebP). Automatically cropped and saved to your profile.
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap;">
+              <label class="btn btn-outline btn-sm" style="cursor:pointer;">
+                Upload Photo
+                <input type="file" id="photo-file-input" accept="image/*" style="display:none;" onchange="handlePhotoUpload(event)" />
+              </label>
+              <button type="button" class="btn btn-ghost btn-sm" onclick="clearUploadedPhoto()">Remove Photo</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="edit-name">Full Name &amp; Credentials</label>
+            <input type="text" id="edit-name" class="form-input" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-role">Lab Role / Title</label>
+            <input type="text" id="edit-role" class="form-input" required />
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label" for="edit-training">
+              Past and Present Training
+              <span class="form-hint">Auto-populated from CV</span>
+            </label>
+            <textarea id="edit-training" class="form-textarea" required></textarea>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label" for="edit-interests">
+              Research &amp; Analytical Interests
+              <span class="form-hint">Auto-populated from CV</span>
+            </label>
+            <textarea id="edit-interests" class="form-textarea" required></textarea>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label" for="edit-projects">
+              Current Projects
+              <span class="form-hint">Auto-populated from CV</span>
+            </label>
+            <textarea id="edit-projects" class="form-textarea" required></textarea>
+          </div>
+
+          <div class="form-group full-width">
+            <label class="form-label" for="edit-outside">
+              Interests Outside of Lab
+              <span class="form-hint">Auto-populated from CV</span>
+            </label>
+            <textarea id="edit-outside" class="form-textarea"></textarea>
+          </div>
+
+          <!-- External Profile Links -->
+          <div class="form-group">
+            <label class="form-label" for="edit-link-website">Personal / Institutional Website</label>
+            <input type="url" id="edit-link-website" class="form-input" placeholder="https://..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-link-scholar">Google Scholar URL</label>
+            <input type="url" id="edit-link-scholar" class="form-input" placeholder="https://scholar.google.com/..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-link-rg">ResearchGate URL</label>
+            <input type="url" id="edit-link-rg" class="form-input" placeholder="https://www.researchgate.net/profile/..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="edit-link-linkedin">LinkedIn URL</label>
+            <input type="url" id="edit-link-linkedin" class="form-input" placeholder="https://www.linkedin.com/in/..." />
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:16px; padding-top:16px; border-top:1px solid var(--border-color);">
+          <button type="button" class="btn btn-ghost" onclick="closeEditorModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Profile Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Lynch Analytical &amp; Clinical Toxicology Laboratory</strong><br/>
+        University of California, San Francisco &middot; Zuckerberg San Francisco General Hospital
+      </div>
+      <div class="footer-links">
+        <a href="https://profiles.ucsf.edu/kara.lynch" target="_blank" rel="noopener noreferrer">UCSF Profiles</a>
+        <a href="https://scholar.google.com/citations?user=pWTTFpIAAAAJ&hl=en" target="_blank" rel="noopener noreferrer">Google Scholar</a>
+        <a href="projects.html">Projects</a>
+        <a href="publications.html">Publications</a>
+        <a href="members.html">Members Portal</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+  <script>
+    let stagedPhotoDataUrl = '';
+
+    function renderMembersPage() {
+      const members = getMembers();
+      const loggedInId = getLoggedInMemberId();
+      const bannerEl = document.getElementById('portal-banner');
+      const gridEl = document.getElementById('members-grid');
+
+      // Render Portal Banner
+      const currentMember = members.find(m => m.id === loggedInId);
+      if (currentMember) {
+        bannerEl.innerHTML = `
+          <div>
+            <div style="font-size:14.5px; font-weight:600; color:var(--text-primary);">
+              Signed in as ${escapeHtml(currentMember.name)} (${escapeHtml(currentMember.role)})
+            </div>
+            <div style="font-size:13px; color:var(--text-secondary);">
+              You can upload your Resume/CV to auto-populate your training, projects, and interests, or upload a profile photo.
+            </div>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <button type="button" class="btn btn-teal btn-sm" onclick="openEditorForMember('${currentMember.id}')">
+              Edit My Profile &amp; Upload CV
+            </button>
+            <button type="button" class="btn btn-outline btn-sm" onclick="openLoginModal()">
+              Switch Member
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" onclick="handleLogout()">
+              Sign Out
+            </button>
+          </div>
+        `;
+      } else {
+        bannerEl.innerHTML = `
+          <div>
+            <div style="font-size:14.5px; font-weight:600; color:var(--text-primary);">
+              Lab Member Self-Service Portal
+            </div>
+            <div style="font-size:13px; color:var(--text-secondary);">
+              Current members can sign in to upload a Resume/CV (auto-populating past &amp; present training, research interests, current projects, and interests outside of lab), upload a portrait photo, and link personal websites, Google Scholar, ResearchGate, or LinkedIn.
+            </div>
+          </div>
+          <button type="button" class="btn btn-outline btn-sm" onclick="openLoginModal()">
+            Sign In to Edit Profile &rarr;
+          </button>
+        `;
+      }
+
+      // Render Member Cards
+      gridEl.innerHTML = members.map(m => {
+        const isMe = m.id === loggedInId;
+        const avatarContent = m.photoUrl
+          ? `<img src="${m.photoUrl}" alt="${escapeHtml(m.name)}" />`
+          : escapeHtml(m.initials || m.name.slice(0, 2).toUpperCase());
+
+        const linksHtml = [];
+        if (m.links?.website) {
+          linksHtml.push(`<a href="${escapeHtml(m.links.website)}" target="_blank" rel="noopener noreferrer" class="ext-link-pill">Website &#8599;</a>`);
+        }
+        if (m.links?.scholar) {
+          linksHtml.push(`<a href="${escapeHtml(m.links.scholar)}" target="_blank" rel="noopener noreferrer" class="ext-link-pill">Google Scholar &#8599;</a>`);
+        }
+        if (m.links?.researchgate) {
+          linksHtml.push(`<a href="${escapeHtml(m.links.researchgate)}" target="_blank" rel="noopener noreferrer" class="ext-link-pill">ResearchGate &#8599;</a>`);
+        }
+        if (m.links?.linkedin) {
+          linksHtml.push(`<a href="${escapeHtml(m.links.linkedin)}" target="_blank" rel="noopener noreferrer" class="ext-link-pill">LinkedIn &#8599;</a>`);
+        }
+
+        return `
+          <article class="member-card ${isMe ? 'is-logged-in-user' : ''}" id="member-${escapeHtml(m.id)}">
+            <div>
+              <div class="member-header">
+                <div class="member-photo">${avatarContent}</div>
+                <div style="flex:1;">
+                  <h2 class="member-name">${escapeHtml(m.name)}</h2>
+                  <span class="member-role-badge">${escapeHtml(m.role)}</span>
+                </div>
+              </div>
+
+              <div class="member-section">
+                <div class="member-section-label">Past &amp; Present Training</div>
+                <div class="member-section-content">${escapeHtml(m.training)}</div>
+              </div>
+
+              <div class="member-section">
+                <div class="member-section-label">Research Interests</div>
+                <div class="member-section-content">${escapeHtml(m.interests)}</div>
+              </div>
+
+              <div class="member-section">
+                <div class="member-section-label">Current Projects</div>
+                <div class="member-section-content">${escapeHtml(m.currentProjects)}</div>
+              </div>
+
+              <div class="member-section">
+                <div class="member-section-label">Interests Outside of Lab</div>
+                <div class="member-section-content">${escapeHtml(m.outsideInterests || '—')}</div>
+              </div>
+            </div>
+
+            <div class="member-links">
+              ${linksHtml.join('')}
+              <button
+                type="button"
+                class="ext-link-pill"
+                style="margin-left:auto; cursor:pointer; color:var(--accent-teal-hover); border-color:#99F6E4; background:var(--bg-accent-subtle);"
+                onclick="quickSignInAndEdit('${escapeHtml(m.id)}')"
+              >
+                ${isMe ? 'Edit Profile / CV' : 'Login &amp; Edit'}
+              </button>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    // Login Modal Handlers
+    function openLoginModal() {
+      const members = getMembers();
+      const select = document.getElementById('login-member-select');
+      const currentId = getLoggedInMemberId() || members[1]?.id || members[0]?.id;
+
+      select.innerHTML = members.map(m => `
+        <option value="${escapeHtml(m.id)}" ${m.id === currentId ? 'selected' : ''}>
+          ${escapeHtml(m.name)} — ${escapeHtml(m.role)}
+        </option>
+      `).join('');
+
+      syncLoginEmailFromSelect();
+      document.getElementById('login-modal').classList.add('open');
+    }
+
+    function closeLoginModal() {
+      document.getElementById('login-modal').classList.remove('open');
+    }
+
+    function syncLoginEmailFromSelect() {
+      const members = getMembers();
+      const selectedId = document.getElementById('login-member-select').value;
+      const member = members.find(m => m.id === selectedId);
+      if (member) {
+        document.getElementById('login-email').value = member.email || `${member.id}@ucsf.edu`;
+      }
+    }
+
+    function handleMemberLoginSubmit(e) {
+      e.preventDefault();
+      const selectedId = document.getElementById('login-member-select').value;
+      setLoggedInMemberId(selectedId);
+      closeLoginModal();
+      renderMembersPage();
+      openEditorForMember(selectedId);
+    }
+
+    function quickSignInAndEdit(memberId) {
+      setLoggedInMemberId(memberId);
+      renderMembersPage();
+      openEditorForMember(memberId);
+    }
+
+    function createNewMemberAccount() {
+      const members = getMembers();
+      const newId = 'member-' + Date.now();
+      const newMember = {
+        id: newId,
+        name: 'New Lab Member',
+        role: 'Research Fellow / Scholar',
+        email: 'new.member@ucsf.edu',
+        initials: 'NM',
+        photoUrl: '',
+        training: 'Upload your CV or enter your academic degrees and fellowships.',
+        interests: 'Clinical toxicology, mass spectrometry, biomarker analysis.',
+        currentProjects: 'Comprehensive Drug Testing in the ZSFG Clinical Lab via X500R',
+        outsideInterests: 'Exploring San Francisco, running, music.',
+        links: { website: '', scholar: '', researchgate: '', linkedin: '' }
+      };
+      members.push(newMember);
+      saveMembers(members);
+      setLoggedInMemberId(newId);
+      closeLoginModal();
+      renderMembersPage();
+      openEditorForMember(newId);
+    }
+
+    // Editor Modal & CV Auto-Populate Handlers
+    function openEditorForMember(memberId) {
+      const members = getMembers();
+      const m = members.find(item => item.id === memberId);
+      if (!m) return;
+
+      document.getElementById('edit-member-id').value = m.id;
+      document.getElementById('edit-name').value = m.name || '';
+      document.getElementById('edit-role').value = m.role || '';
+      document.getElementById('edit-training').value = m.training || '';
+      document.getElementById('edit-interests').value = m.interests || '';
+      document.getElementById('edit-projects').value = m.currentProjects || '';
+      document.getElementById('edit-outside').value = m.outsideInterests || '';
+
+      document.getElementById('edit-link-website').value = m.links?.website || '';
+      document.getElementById('edit-link-scholar').value = m.links?.scholar || '';
+      document.getElementById('edit-link-rg').value = m.links?.researchgate || '';
+      document.getElementById('edit-link-linkedin').value = m.links?.linkedin || '';
+
+      stagedPhotoDataUrl = m.photoUrl || '';
+      updatePhotoPreviewUI(m.name, stagedPhotoDataUrl);
+
+      hideToast();
+      document.getElementById('editor-modal').classList.add('open');
+    }
+
+    function closeEditorModal() {
+      document.getElementById('editor-modal').classList.remove('open');
+    }
+
+    function updatePhotoPreviewUI(name, photoUrl) {
+      const previewEl = document.getElementById('edit-photo-preview');
+      if (photoUrl) {
+        previewEl.innerHTML = `<img src="${photoUrl}" alt="Profile preview" />`;
+      } else {
+        const initials = (name || 'LM').split(' ').map(p => p[0]).join('').slice(0, 2).toUpperCase();
+        previewEl.innerHTML = escapeHtml(initials);
+      }
+    }
+
+    function handlePhotoUpload(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          // Resize to crisp 280x280 square thumbnail so localStorage stays fast
+          const canvas = document.createElement('canvas');
+          const size = 280;
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext('2d');
+          const minDim = Math.min(img.width, img.height);
+          const sx = (img.width - minDim) / 2;
+          const sy = (img.height - minDim) / 2;
+          ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, size, size);
+          stagedPhotoDataUrl = canvas.toDataURL('image/jpeg', 0.86);
+          updatePhotoPreviewUI(document.getElementById('edit-name').value, stagedPhotoDataUrl);
+          showToast('Photograph uploaded and cropped. Click "Save Profile Changes" to publish.');
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function clearUploadedPhoto() {
+      stagedPhotoDataUrl = '';
+      updatePhotoPreviewUI(document.getElementById('edit-name').value, '');
+    }
+
+    async function handleCvFileUpload(event) {
+      const file = event.target.files?.[0];
+      if (!file) return;
+      try {
+        const extractedText = await extractTextFromFile(file);
+        applyParsedCvToForm(extractedText, `Auto-populated fields from "${file.name}"! Review and click Save.`);
+      } catch (err) {
+        showToast('Could not read file automatically. Try pasting your CV text below.');
+      }
+    }
+
+    function togglePasteCvBox() {
+      const box = document.getElementById('paste-cv-container');
+      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function handlePastedCvParse() {
+      const raw = document.getElementById('paste-cv-textarea').value;
+      if (!raw.trim()) return;
+      applyParsedCvToForm(raw, 'Auto-populated fields from pasted CV text!');
+    }
+
+    function runSampleCvDemo() {
+      const memberName = document.getElementById('edit-name').value || 'Lab Member';
+      const sampleCv = `
+Curriculum Vitae — ${memberName}
+
+Past and Present Training:
+Ph.D. in Analytical Chemistry, University of California (2023)
+Postdoctoral Fellow in Clinical Chemistry & Toxicology, UCSF Department of Laboratory Medicine / ZSFG (2024–Present)
+B.S. in Biochemistry, Summa Cum Laude (2018)
+
+Research Interests:
+High-resolution quadrupole time-of-flight mass spectrometry (LC-QTOF-MS), untargeted metabolomics, ambient ionization (DART-MS), synthetic opioid and novel benzodiazepine toxicokinetics.
+
+Current Projects:
+Comprehensive Drug Testing in the ZSFG Clinical Lab via X500R
+Ward 93 Drug Surveillance with DPH
+Investigating Kratom Alkaloids
+
+Interests Outside of Lab:
+Trail running in the Marin Headlands, espresso roasting, botanical illustration, and coastal kayaking.
+
+Links:
+https://profiles.ucsf.edu/kara.lynch
+https://scholar.google.com/citations?user=pWTTFpIAAAAJ&hl=en
+https://www.researchgate.net/profile/Michael-Metrick
+      `.trim();
+
+      const pasteBox = document.getElementById('paste-cv-container');
+      pasteBox.style.display = 'block';
+      document.getElementById('paste-cv-textarea').value = sampleCv;
+      applyParsedCvToForm(sampleCv, 'Sample CV parsed! Past & Present Training, Research Interests, Current Projects, and Outside Interests have been auto-populated.');
+    }
+
+    function applyParsedCvToForm(rawText, toastMessage) {
+      const parsed = parseResumeTextIntoFields(rawText);
+      if (parsed.training) document.getElementById('edit-training').value = parsed.training;
+      if (parsed.interests) document.getElementById('edit-interests').value = parsed.interests;
+      if (parsed.currentProjects) document.getElementById('edit-projects').value = parsed.currentProjects;
+      if (parsed.outsideInterests) document.getElementById('edit-outside').value = parsed.outsideInterests;
+
+      if (parsed.website && !document.getElementById('edit-link-website').value) {
+        document.getElementById('edit-link-website').value = parsed.website;
+      }
+      if (parsed.scholar && !document.getElementById('edit-link-scholar').value) {
+        document.getElementById('edit-link-scholar').value = parsed.scholar;
+      }
+      if (parsed.researchgate && !document.getElementById('edit-link-rg').value) {
+        document.getElementById('edit-link-rg').value = parsed.researchgate;
+      }
+      if (parsed.linkedin && !document.getElementById('edit-link-linkedin').value) {
+        document.getElementById('edit-link-linkedin').value = parsed.linkedin;
+      }
+
+      showToast(toastMessage);
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('cv-parse-toast');
+      toast.textContent = msg;
+      toast.classList.add('visible');
+    }
+
+    function hideToast() {
+      const toast = document.getElementById('cv-parse-toast');
+      toast.classList.remove('visible');
+    }
+
+    function handleProfileSave(e) {
+      e.preventDefault();
+      const id = document.getElementById('edit-member-id').value;
+      const members = getMembers();
+      const idx = members.findIndex(m => m.id === id);
+      if (idx === -1) return;
+
+      const updatedName = document.getElementById('edit-name').value.trim();
+      const initials = updatedName
+        .replace(/,.*$/, '')
+        .split(' ')
+        .filter(Boolean)
+        .map(part => part[0])
+        .slice(0, 2)
+        .join('')
+        .toUpperCase();
+
+      members[idx] = {
+        ...members[idx],
+        name: updatedName,
+        role: document.getElementById('edit-role').value.trim(),
+        initials: initials || members[idx].initials,
+        photoUrl: stagedPhotoDataUrl,
+        training: document.getElementById('edit-training').value.trim(),
+        interests: document.getElementById('edit-interests').value.trim(),
+        currentProjects: document.getElementById('edit-projects').value.trim(),
+        outsideInterests: document.getElementById('edit-outside').value.trim(),
+        links: {
+          website: document.getElementById('edit-link-website').value.trim(),
+          scholar: document.getElementById('edit-link-scholar').value.trim(),
+          researchgate: document.getElementById('edit-link-rg').value.trim(),
+          linkedin: document.getElementById('edit-link-linkedin').value.trim()
+        }
+      };
+
+      saveMembers(members);
+      updateAuthHeaderUI();
+      renderMembersPage();
+      closeEditorModal();
+    }
+
+    function resetMembersToDefault() {
+      localStorage.removeItem(STORAGE_KEY_MEMBERS);
+      renderMembersPage();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      renderMembersPage();
+
+      // Check URL params for ?login=1 or ?edit=1
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('edit') === '1' && getLoggedInMemberId()) {
+        openEditorForMember(getLoggedInMemberId());
+      } else if (params.get('login') === '1') {
+        openLoginModal();
+      }
+    });
+  </script>
+</body>
+</html>

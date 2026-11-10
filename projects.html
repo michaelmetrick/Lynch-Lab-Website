@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Current Projects | Lynch Lab — UCSF / ZSFG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="index.html" class="brand">
+        <div class="brand-mark">m/z</div>
+        <div class="brand-text">
+          <span class="brand-title">Lynch Laboratory</span>
+          <span class="brand-subtitle">UCSF Dept. of Laboratory Medicine &middot; ZSFG Toxicology</span>
+        </div>
+      </a>
+
+      <nav class="nav-links" aria-label="Main Navigation">
+        <a href="index.html" class="nav-link">Overview</a>
+        <a href="projects.html" class="nav-link active">Current Projects</a>
+        <a href="publications.html" class="nav-link">Publications</a>
+        <a href="members.html" class="nav-link">Lab Members</a>
+      </nav>
+
+      <div class="header-actions" id="header-auth-status">
+        <a href="members.html?login=1" class="btn btn-outline btn-sm">Member Login</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="section">
+      <div class="container">
+        <div class="section-header">
+          <div>
+            <div class="eyebrow"><span class="eyebrow-dot"></span> Active Research Portfolio</div>
+            <h1 class="hero-title" style="font-size: 2.5rem; margin-bottom: 12px;">Current Projects</h1>
+            <p class="section-subtitle">
+              Our research integrates high-resolution mass spectrometry, ambient ionization, and public health surveillance to address urgent toxicological challenges in San Francisco and beyond.
+            </p>
+          </div>
+        </div>
+
+        <div class="projects-list">
+
+          <!-- Project 1: Ward 93 Drug Surveillance with DPH -->
+          <article class="project-card" id="ward93">
+            <div class="project-logo-box">
+              <img src="assets/projects/ward93_logo.jpg" alt="Cartoonized logo for Ward 93 Drug Surveillance with DPH" />
+            </div>
+            <div>
+              <div class="project-meta-top">
+                <span class="project-code">PRJ-01 &middot; PUBLIC HEALTH SURVEILLANCE</span>
+                <span class="pill">ZSFG Ward 93 &amp; SFDPH</span>
+              </div>
+              <h2 class="project-title">Ward 93 Drug Surveillance with DPH</h2>
+              <p class="project-desc">
+                In close collaboration with the ZSFG Ward 93 Opioid Treatment Program and the San Francisco Department of Public Health (SFDPH), this longitudinal surveillance initiative monitors real-world shifts in the local illicit drug supply. Using comprehensive LC-HRMS urine toxicology testing, we track the emergence and co-exposure patterns of synthetic opioids (fentanyl analogs, nitazenes), veterinary sedative adulterants (xylazine, medetomidine), and novel designer benzodiazepines (bromazolam) to inform clinical addiction care and municipal overdose prevention strategies.
+              </p>
+              <div class="project-specs">
+                <div class="spec-item">
+                  <span class="spec-label">Key Analytes</span>
+                  <span class="spec-val">Fentanyl Analogs, Xylazine, Bromazolam, Medetomidine</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-label">Partners</span>
+                  <span class="spec-val">ZSFG Ward 93 OTP &amp; SF Dept. of Public Health</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-label">Project Team</span>
+                  <span class="spec-val">Kara Lynch, Lauren Bishop, Judah Iwawaki</span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Project 2: Comprehensive Drug Testing in the ZSFG Clinical Lab via X500R -->
+          <article class="project-card" id="x500r">
+            <div class="project-logo-box">
+              <img src="assets/projects/x500r_logo.jpg" alt="Cartoonized logo for Comprehensive Drug Testing via SCIEX X500R" />
+            </div>
+            <div>
+              <div class="project-meta-top">
+                <span class="project-code">PRJ-02 &middot; CLINICAL LC-HRMS</span>
+                <span class="pill">SCIEX X500R QTOF</span>
+              </div>
+              <h2 class="project-title">Comprehensive Drug Testing in the ZSFG Clinical Lab via X500R</h2>
+              <p class="project-desc">
+                Conventional targeted panels and immunoassays frequently miss unscheduled or unexpected toxic exposures in emergency department and ICU patients. We deploy the SCIEX X500R Quadrupole Time-of-Flight (QTOF) high-resolution mass spectrometer in the ZSFG Core Clinical Laboratory to perform broad-spectrum screening across 239 drugs, illicit substances, and metabolites. Our work systematically optimizes Information-Dependent Acquisition (IDA) and Sequential Window Acquisition of All Theoretical Mass Spectra (SWATH-MS) workflows for rapid clinical turnaround.
+              </p>
+              <div class="project-specs">
+                <div class="spec-item">
+                  <span class="spec-label">Instrumentation</span>
+                  <span class="spec-val">SCIEX X500R QTOF LC-HRMS (SWATH / IDA)</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-label">Spectral Coverage</span>
+                  <span class="spec-val">239 Drugs</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-label">Project Team</span>
+                  <span class="spec-val">Kara Lynch, Gillian Rexroad, Priscilla Yeung, Michael Metrick</span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Project 3: Investigating DART Mass Spectrometry -->
+          <article class="project-card" id="dart-ms">
+            <div class="project-logo-box">
+              <img src="assets/projects/dart_ms_logo.jpg" alt="Cartoonized logo for Investigating DART Mass Spectrometry" />
+            </div>
+            <div>
+              <div class="project-meta-top">
+                <span class="project-code">PRJ-03 &middot; AMBIENT IONIZATION</span>
+                <span class="pill">DART-HRMS / DART-MS/MS</span>
+              </div>
+              <h2 class="project-title">Investigating DART Mass Spectrometry</h2>
+              <p class="project-desc">
+                Direct Analysis in Real Time (DART) mass spectrometry enables ambient ionization directly from solid, liquid, or swabbed surfaces without chromatographic separation. We are investigating DART-MS coupled to high-resolution and tandem mass spectrometers for sub-minute screening of drug checking samples, adulterated pharmaceuticals, biological fluids, and rapid clinical toxicology triage where time-to-result is critical.
+              </p>
+              <div class="project-specs">
+                <div class="spec-item">
+                  <span class="spec-label">Ionization Mode</span>
+                  <span class="spec-val">Ambient Metastable Helium Desorption Ionization</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-label">Analysis Speed</span>
+                  <span class="spec-val">&lt; 30 Seconds per Specimen (Chromatography-Free)</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-label">Project Team</span>
+                  <span class="spec-val">Kara Lynch, Priscilla Yeung, Gillian Rexroad, Lauren Bishop</span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Project 4: Investigating Kratom Alkaloids -->
+          <article class="project-card" id="kratom">
+            <div class="project-logo-box">
+              <img src="assets/projects/kratom_logo.jpg" alt="Cartoonized logo for Investigating Kratom Alkaloids" />
+            </div>
+            <div>
+              <div class="project-meta-top">
+                <span class="project-code">PRJ-04 &middot; BOTANICAL TOXICOLOGY</span>
+                <span class="pill">Mitragyna speciosa</span>
+              </div>
+              <h2 class="project-title">Investigating Kratom Alkaloids</h2>
+              <p class="project-desc">
+                Commercial products derived from <em>Mitragyna speciosa</em> (Kratom) contain complex mixtures of indole and oxindole alkaloids with atypical opioid and adrenergic pharmacology, including semi-synthetic concentrated 7-hydroxymitragynine preparations. Because mitragynine shares an exact mass with diastereomers such as speciociliatine, speciogynine, and mitraciliatine, we are developing high-resolution chromatographic and mass spectrometric methods to resolve and quantify individual Kratom alkaloids and active metabolites in clinical specimens.
+              </p>
+              <div class="project-specs">
+                <div class="spec-item">
+                  <span class="spec-label">Target Alkaloids</span>
+                  <span class="spec-val">Mitragynine, 7-OH-Mitragynine, Speciociliatine, Paynantheine</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-label">Analytical Challenge</span>
+                  <span class="spec-val">Isobaric Diastereomer Resolution &amp; Metabolite Profiling</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-label">Project Team</span>
+                  <span class="spec-val">Kara Lynch, Hannah Lusk, Lauren Bishop</span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <!-- Project 5: THC / Nicotine Quantitation -->
+          <article class="project-card" id="thc-nicotine">
+            <div class="project-logo-box">
+              <img src="assets/projects/thc_nicotine_logo.jpg" alt="Cartoonized logo for THC and Nicotine Quantitation" />
+            </div>
+            <div>
+              <div class="project-meta-top">
+                <span class="project-code">PRJ-05 &middot; QUANTITATIVE BIOMARKERS</span>
+                <span class="pill">LC-MS/MS Quantitation</span>
+              </div>
+              <h2 class="project-title">THC / Nicotine Quantitation</h2>
+              <p class="project-desc">
+                Accurate low-picogram/nanogram quantitation of cannabinoids and tobacco alkaloids is essential for clinical toxicology, pediatric accidental ingestion evaluation, maternal-fetal exposure studies, and public health epidemiology. Our laboratory develops and validates robust isotope-dilution LC-MS/MS assays for &Delta;<sup>9</sup>-THC, 11-OH-THC, THC-COOH, cannabidiol (CBD), nicotine, cotinine, trans-3'-hydroxycotinine, and anabasine across serum, plasma, urine, and alternative matrices.
+              </p>
+              <div class="project-specs">
+                <div class="spec-item">
+                  <span class="spec-label">Cannabinoid Panel</span>
+                  <span class="spec-val">&Delta;<sup>9</sup>-THC, 11-OH-THC, THC-COOH, CBD, CBN</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-label">Nicotine Panel</span>
+                  <span class="spec-val">Nicotine, Cotinine, 3-OH-Cotinine, Anabasine</span>
+                </div>
+                <div class="spec-item">
+                  <span class="spec-label">Project Team</span>
+                  <span class="spec-val">Kara Lynch, Emilio Mejia</span>
+                </div>
+              </div>
+            </div>
+          </article>
+
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="footer-inner">
+      <div>
+        <strong>Lynch Analytical &amp; Clinical Toxicology Laboratory</strong><br/>
+        University of California, San Francisco &middot; Zuckerberg San Francisco General Hospital
+      </div>
+      <div class="footer-links">
+        <a href="https://profiles.ucsf.edu/kara.lynch" target="_blank" rel="noopener noreferrer">UCSF Profiles</a>
+        <a href="https://scholar.google.com/citations?user=pWTTFpIAAAAJ&hl=en" target="_blank" rel="noopener noreferrer">Google Scholar</a>
+        <a href="projects.html">Projects</a>
+        <a href="publications.html">Publications</a>
+        <a href="members.html">Members Portal</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
