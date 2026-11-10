@@ -26,6 +26,7 @@
         <a href="projects.html" class="nav-link">Current Projects</a>
         <a href="publications.html" class="nav-link active">Publications</a>
         <a href="members.html" class="nav-link">Lab Members</a>
+        <a href="emeritus.html" class="nav-link">Emeritus</a>
       </nav>
 
       <div class="header-actions" id="header-auth-status">
@@ -131,7 +132,7 @@
       }
 
       container.innerHTML = filtered.map(pub => `
-        <article class="pub-item">
+        <article class="pub-item" id="${pub.id}">
           <div class="pub-top">
             <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
               <span class="pub-year">${pub.year}</span>
@@ -152,6 +153,10 @@
           </div>
         </article>
       `).join('');
+
+      if (typeof refreshInlineEditableElements === 'function') {
+        refreshInlineEditableElements();
+      }
     }
 
     function copyBibtex(pubId, btnEl) {

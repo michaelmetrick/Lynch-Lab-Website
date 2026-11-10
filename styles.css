@@ -1053,6 +1053,59 @@ main {
 }
 
 /* ==========================================================================
+   Site-Wide Inline Text Editing for Logged-In Members
+   ========================================================================== */
+
+body.member-edit-mode [contenteditable="true"] {
+  outline: 1px dashed rgba(13, 148, 136, 0.45);
+  outline-offset: 3px;
+  border-radius: 3px;
+  transition: outline-color 0.15s ease, background-color 0.15s ease;
+  cursor: text;
+}
+
+body.member-edit-mode [contenteditable="true"]:hover {
+  outline: 1.5px dashed var(--accent-teal);
+  background-color: rgba(240, 253, 250, 0.55);
+}
+
+body.member-edit-mode [contenteditable="true"]:focus {
+  outline: 2px solid var(--accent-teal);
+  background-color: #FFFFFF;
+  box-shadow: 0 2px 10px rgba(13, 148, 136, 0.12);
+}
+
+.member-edit-toolbar {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 180;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-strong);
+  border-left: 4px solid var(--accent-teal);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  box-shadow: var(--shadow-md);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.member-edit-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #94A3B8;
+  display: inline-block;
+}
+
+body.member-edit-mode .member-edit-status-dot {
+  background: var(--accent-teal);
+  box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.2);
+}
+
+/* ==========================================================================
    Responsive Design
    ========================================================================== */
 

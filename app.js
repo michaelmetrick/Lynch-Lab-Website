@@ -4,6 +4,8 @@
 
 const STORAGE_KEY_MEMBERS = 'lynch_lab_members_v3';
 const STORAGE_KEY_AUTH = 'lynch_lab_logged_in_member_v1';
+const STORAGE_KEY_PAGE_EDITS = 'lynch_lab_page_edits_v1';
+const STORAGE_KEY_EDIT_MODE = 'lynch_lab_inline_edit_mode_v1';
 
 // Official Lab Member Credentials (typed username & password)
 const MEMBER_CREDENTIALS = {
@@ -300,10 +302,26 @@ function getLoggedInMemberId() {
 function setLoggedInMemberId(id) {
   if (id) {
     localStorage.setItem(STORAGE_KEY_AUTH, id);
+    if (localStorage.getItem(STORAGE_KEY_EDIT_MODE) === null) {
+      localStorage.setItem(STORAGE_KEY_EDIT_MODE, '1');
+    }
   } else {
     localStorage.removeItem(STORAGE_KEY_AUTH);
   }
   updateAuthHeaderUI();
+  refreshInlineEditableElements();
+}
+
+function isInlineEditModeEnabled() {
+  if (!getLoggedInMemberId()) return false;
+  return localStorage.getItem(STORAGE_KEY_EDIT_MODE) !== '0';
+}
+
+function toggleInlineEditMode() {
+  const next = isInlineEditModeEnabled() ? '0' : '1';
+  localStorage.setItem(STORAGE_KEY_EDIT_MODE, next);
+  updateAuthHeaderUI();
+  refreshInlineEditableElements();
 }
 
 function updateAuthHeaderUI() {
@@ -312,20 +330,25 @@ function updateAuthHeaderUI() {
   const currentId = getLoggedInMemberId();
   const members = getMembers();
   const currentMember = members.find(m => m.id === currentId);
+  const editActive = isInlineEditModeEnabled();
 
   if (currentMember) {
     authContainer.innerHTML = `
       <span class="pill pill-teal" style="font-size:12.5px;">
         Signed in: <strong>${escapeHtml(currentMember.name.split(',')[0])}</strong>
       </span>
-      <a href="members.html?edit=1" class="btn btn-outline btn-sm">Edit Profile / CV</a>
+      <button type="button" class="btn ${editActive ? 'btn-teal' : 'btn-outline'} btn-sm" onclick="toggleInlineEditMode()">
+        ${editActive ? 'Editing Page Text: ON' : 'Edit Page Text'}
+      </button>
+      <a href="members.html?edit=1" class="btn btn-outline btn-sm">Profile / CV</a>
       <button type="button" class="btn btn-ghost btn-sm" onclick="handleLogout()">Sign Out</button>
     `;
   } else {
     authContainer.innerHTML = `
-      <a href="members.html?login=1" class="btn btn-outline btn-sm">Member Login</a>
+      <button type="button" class="btn btn-outline btn-sm" onclick="openUniversalLoginModal()">Member Login</button>
     `;
   }
+  renderFloatingEditToolbar();
 }
 
 function handleLogout() {
@@ -333,6 +356,7 @@ function handleLogout() {
   if (typeof renderMembersPage === 'function') {
     renderMembersPage();
   }
+  refreshInlineEditableElements();
 }
 
 function escapeHtml(str) {
@@ -484,6 +508,257 @@ async function extractTextFromFile(file) {
   return printableChunks.join('\n');
 }
 
+// ==========================================================================
+// Universal Member Login Modal & Site-Wide Inline Text Editor
+// ==========================================================================
+
+const INLINE_TEXT_SELECTOR = [
+  'main h1', 'main h2', 'main h3', 'main h4',
+  'main p', 'main li',
+  '.brand-title', '.brand-subtitle',
+  '.eyebrow',
+  '.pi-name', '.pi-role',
+  '.metric-value', '.metric-label',
+  '.pillar-num', '.pillar-title', '.pillar-desc',
+  '.project-code', '.project-title', '.project-desc',
+  '.spec-label', '.spec-val',
+  '.pub-year', '.pub-journal', '.pub-title', '.pub-authors', '.pub-summary',
+  '.member-name', '.member-role-badge', '.member-section-label', '.member-section-content',
+  '.site-footer strong'
+].join(', ');
+
+function getCurrentPageKey() {
+  const path = window.location.pathname;
+  const filename = path.substring(path.lastIndexOf('/') + 1) || 'index.html';
+  return filename.toLowerCase();
+}
+
+function getAllPageEdits() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY_PAGE_EDITS) || '{}');
+  } catch (e) {
+    return {};
+  }
+}
+
+function savePageEdit(pageKey, elementKey, htmlValue) {
+  const all = getAllPageEdits();
+  if (!all[pageKey]) all[pageKey] = {};
+  all[pageKey][elementKey] = htmlValue;
+  localStorage.setItem(STORAGE_KEY_PAGE_EDITS, JSON.stringify(all));
+}
+
+function resetCurrentPageTextEdits() {
+  const pageKey = getCurrentPageKey();
+  const all = getAllPageEdits();
+  if (all[pageKey]) {
+    delete all[pageKey];
+    localStorage.setItem(STORAGE_KEY_PAGE_EDITS, JSON.stringify(all));
+  }
+  window.location.reload();
+}
+
+function refreshInlineEditableElements() {
+  const pageKey = getCurrentPageKey();
+  const savedForPage = getAllPageEdits()[pageKey] || {};
+  const canEdit = isInlineEditModeEnabled();
+
+  if (canEdit) {
+    document.body.classList.add('member-edit-mode');
+  } else {
+    document.body.classList.remove('member-edit-mode');
+  }
+
+  const elements = document.querySelectorAll(INLINE_TEXT_SELECTOR);
+  elements.forEach((el, index) => {
+    // Skip elements inside modals or filter bars
+    if (el.closest('.modal-backdrop') || el.closest('#portal-banner')) return;
+
+    // Assign stable key
+    if (!el.dataset.inlineEditKey) {
+      const cardParent = el.closest('[id]');
+      const prefix = cardParent ? cardParent.id : 'el';
+      el.dataset.inlineEditKey = `${prefix}-${el.tagName.toLowerCase()}-${index}`;
+    }
+
+    const key = el.dataset.inlineEditKey;
+
+    // Apply saved page text if available (and not already applied while focused)
+    if (savedForPage[key] !== undefined && document.activeElement !== el) {
+      el.innerHTML = savedForPage[key];
+    }
+
+    if (canEdit) {
+      el.setAttribute('contenteditable', 'true');
+      el.setAttribute('spellcheck', 'true');
+      if (!el.dataset.inlineListenerBound) {
+        el.dataset.inlineListenerBound = '1';
+        el.addEventListener('input', () => handleInlineElementChange(el));
+        el.addEventListener('blur', () => handleInlineElementChange(el));
+      }
+    } else {
+      el.removeAttribute('contenteditable');
+    }
+  });
+
+  renderFloatingEditToolbar();
+}
+
+function handleInlineElementChange(el) {
+  const pageKey = getCurrentPageKey();
+  const key = el.dataset.inlineEditKey;
+  if (!key) return;
+
+  savePageEdit(pageKey, key, el.innerHTML);
+
+  // If this element belongs to a member card on members.html, also sync with member storage
+  const memberCard = el.closest('.member-card[id^="member-"]');
+  if (memberCard) {
+    const memberId = memberCard.id.replace(/^member-/, '');
+    const members = getMembers();
+    const mIdx = members.findIndex(m => m.id === memberId);
+    if (mIdx !== -1) {
+      const textVal = el.textContent.trim();
+      if (el.classList.contains('member-name')) {
+        members[mIdx].name = textVal;
+      } else if (el.classList.contains('member-role-badge')) {
+        members[mIdx].role = textVal;
+      } else if (el.classList.contains('member-section-content')) {
+        const sec = el.closest('.member-section');
+        const label = sec?.querySelector('.member-section-label')?.textContent.toLowerCase() || '';
+        if (label.includes('training')) members[mIdx].training = textVal;
+        else if (label.includes('research')) members[mIdx].interests = textVal;
+        else if (label.includes('project')) members[mIdx].currentProjects = textVal;
+        else if (label.includes('outside')) members[mIdx].outsideInterests = textVal;
+      }
+      saveMembers(members);
+    }
+  }
+
+  const statusLabel = document.getElementById('floating-edit-save-status');
+  if (statusLabel) {
+    statusLabel.textContent = 'Saved just now';
+  }
+}
+
+function renderFloatingEditToolbar() {
+  let bar = document.getElementById('member-floating-edit-toolbar');
+  const loggedInId = getLoggedInMemberId();
+
+  if (!loggedInId) {
+    if (bar) bar.remove();
+    return;
+  }
+
+  if (!bar) {
+    bar = document.createElement('div');
+    bar.id = 'member-floating-edit-toolbar';
+    bar.className = 'member-edit-toolbar';
+    document.body.appendChild(bar);
+  }
+
+  const editActive = isInlineEditModeEnabled();
+  bar.innerHTML = `
+    <span class="member-edit-status-dot"></span>
+    <div>
+      <div style="font-weight:600; color:var(--text-primary); line-height:1.2;">
+        ${editActive ? 'Inline Text Edit Mode: ON' : 'Inline Text Edit Mode: Paused'}
+      </div>
+      <div id="floating-edit-save-status" style="font-size:11.5px; color:var(--text-muted);">
+        ${editActive ? 'Click any text on this page to edit directly' : 'Click Enable to edit text on this page'}
+      </div>
+    </div>
+    <button type="button" class="btn btn-outline btn-sm" onclick="toggleInlineEditMode()">
+      ${editActive ? 'Pause Editing' : 'Enable Editing'}
+    </button>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="resetCurrentPageTextEdits()" title="Restore default text for this page">
+      Reset Page
+    </button>
+  `;
+}
+
+function ensureUniversalLoginModal() {
+  if (document.getElementById('login-modal')) return;
+
+  const modalBackdrop = document.createElement('div');
+  modalBackdrop.className = 'modal-backdrop';
+  modalBackdrop.id = 'login-modal';
+  modalBackdrop.setAttribute('role', 'dialog');
+  modalBackdrop.setAttribute('aria-modal', 'true');
+  modalBackdrop.innerHTML = `
+    <div class="modal-panel" style="max-width: 500px;">
+      <div class="modal-header">
+        <div>
+          <div class="eyebrow" style="margin-bottom:4px;"><span class="eyebrow-dot"></span> Lab Authentication</div>
+          <h2 class="modal-title">Member Portal Sign In</h2>
+        </div>
+        <button type="button" class="close-btn" onclick="closeUniversalLoginModal()" aria-label="Close">&times;</button>
+      </div>
+
+      <form onsubmit="handleUniversalLoginSubmit(event)">
+        <div id="universal-login-error" style="display:none; padding:10px 14px; border-radius:var(--radius-sm); font-size:13px; background:#FEF2F2; color:#991B1B; border:1px solid #FECACA; margin-bottom:16px;"></div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label class="form-label" for="universal-login-username">Username</label>
+            <input type="text" id="universal-login-username" class="form-input" placeholder="e.g. Kara, Lauren, Emilio..." autocomplete="username" required />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="universal-login-password">Password</label>
+            <input type="password" id="universal-login-password" class="form-input" placeholder="Enter your password" autocomplete="current-password" required />
+          </div>
+        </div>
+
+        <div style="display:flex; justify-content:flex-end; align-items:center; gap:10px; margin-top:12px;">
+          <button type="button" class="btn btn-ghost" onclick="closeUniversalLoginModal()">Cancel</button>
+          <button type="submit" class="btn btn-primary">Sign In to Edit Page &rarr;</button>
+        </div>
+      </form>
+    </div>
+  `;
+  document.body.appendChild(modalBackdrop);
+}
+
+function openUniversalLoginModal() {
+  if (typeof openLoginModal === 'function') {
+    openLoginModal();
+    return;
+  }
+  ensureUniversalLoginModal();
+  const errEl = document.getElementById('universal-login-error');
+  if (errEl) errEl.style.display = 'none';
+  const uEl = document.getElementById('universal-login-username');
+  const pEl = document.getElementById('universal-login-password');
+  if (uEl) uEl.value = '';
+  if (pEl) pEl.value = '';
+  document.getElementById('login-modal').classList.add('open');
+  setTimeout(() => uEl?.focus(), 50);
+}
+
+function closeUniversalLoginModal() {
+  const modal = document.getElementById('login-modal');
+  if (modal) modal.classList.remove('open');
+}
+
+function handleUniversalLoginSubmit(e) {
+  e.preventDefault();
+  const u = document.getElementById('universal-login-username').value;
+  const p = document.getElementById('universal-login-password').value;
+  const matchedId = authenticateMember(u, p);
+  if (!matchedId) {
+    const errEl = document.getElementById('universal-login-error');
+    errEl.textContent = 'Invalid username or password. Please check your credentials and try again.';
+    errEl.style.display = 'block';
+    return;
+  }
+  localStorage.setItem(STORAGE_KEY_EDIT_MODE, '1');
+  setLoggedInMemberId(matchedId);
+  closeUniversalLoginModal();
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   updateAuthHeaderUI();
+  setTimeout(() => {
+    refreshInlineEditableElements();
+  }, 30);
 });
