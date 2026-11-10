@@ -2,8 +2,30 @@
    Lynch Laboratory — Shared Data Store, Publications Filter & Member CV Portal
    ========================================================================== */
 
-const STORAGE_KEY_MEMBERS = 'lynch_lab_members_v2';
+const STORAGE_KEY_MEMBERS = 'lynch_lab_members_v3';
 const STORAGE_KEY_AUTH = 'lynch_lab_logged_in_member_v1';
+
+// Official Lab Member Credentials (typed username & password)
+const MEMBER_CREDENTIALS = {
+  'kara': { memberId: 'kara-lynch', username: 'Kara', password: 'K4r4' },
+  'emilio': { memberId: 'emilio-mejia', username: 'Emilio', password: '3milio' },
+  'lauren': { memberId: 'lauren-bishop', username: 'Lauren', password: 'Laur3n' },
+  'hannah': { memberId: 'hannah-lusk', username: 'Hannah', password: 'H4nn4h' },
+  'gillian': { memberId: 'gillian-rexroad', username: 'Gillian', password: 'G1ll1an' },
+  'judah': { memberId: 'judah-iwawaki', username: 'Judah', password: 'Jud4h' },
+  'michael': { memberId: 'michael-metrick', username: 'Michael', password: 'M1chael' },
+  'priscilla': { memberId: 'priscilla-yeung', username: 'Priscilla', password: 'Pr1sc1lla' }
+};
+
+function authenticateMember(typedUsername, typedPassword) {
+  if (!typedUsername || !typedPassword) return null;
+  const key = typedUsername.trim().toLowerCase();
+  const record = MEMBER_CREDENTIALS[key];
+  if (record && record.password === typedPassword) {
+    return record.memberId;
+  }
+  return null;
+}
 
 // Default Lab Members Drafted from LinkedIn, ResearchGate, Stanford & UCSF Profiles
 const DEFAULT_MEMBERS = [
